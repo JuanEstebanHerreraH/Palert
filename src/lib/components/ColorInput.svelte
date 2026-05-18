@@ -10,19 +10,17 @@
   let inputText    = value;
   let isValid      = true;
   let isSpinning   = false;
+  let isFocused    = false;
 
-  // Sync prop → local input when parent changes it programmatically
-  $: if (isValidHex(value) && value !== inputText) {
+  // Sync prop → local input when parent changes it externally (not while user is typing)
+  $: if (!isFocused && isValidHex(value) && value.toLowerCase() !== inputText.toLowerCase()) {
     inputText = value;
     isValid = true;
   }
 
-  function handleTextInput(e: Event) {
-    const raw = (e.target as HTMLInputElement).value;
-    inputText = raw;
-
+  function handleTextInput() {
     // Try to parse partial inputs like "3f6"
-    let hex = raw.trim();
+    let hex = inputText.trim();
     if (!hex.startsWith('#')) hex = '#' + hex;
 
     if (isValidHex(hex)) {
@@ -83,15 +81,18 @@
     <!-- Hex text input -->
     <input
       type="text"
-      value={inputText}
+      bind:value={inputText}
       on:input={handleTextInput}
+      on:focus={() => (isFocused = true)}
+      on:blur={() => (isFocused = false)}
       maxlength={7}
       spellcheck={false}
       placeholder="#6366f1"
+      title="Haz clic para editar el color hex"
       class="flex-1 min-w-0 bg-surface border rounded-xl px-4 font-mono text-sm text-text
-             focus:outline-none focus:ring-1 transition-all
+             focus:outline-none focus:ring-1 transition-all cursor-text
              {isValid
-               ? 'border-border focus:border-white/25 focus:ring-white/10'
+               ? 'border-border hover:border-white/20 focus:border-white/30 focus:ring-white/10'
                : 'border-red-500/40 focus:border-red-500/60 focus:ring-red-500/10'}"
     />
 
